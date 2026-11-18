@@ -1,0 +1,119 @@
+{
+  "project": "qwen_icl_molecular_generation",
+  "experiment_name": "logp_sas_tpsa",
+  "seed": 42,
+  "target_seed_offset": 6,
+  "dataset": {
+    "train": "outputs/processed/guacamol_full/train.csv",
+    "validation": "outputs/processed/guacamol_full/val.csv",
+    "properties": [
+      "logp",
+      "tpsa",
+      "sas",
+      "qed"
+    ]
+  },
+  "model": {
+    "model_id": "Qwen/Qwen3.8-27B",
+    "trust_remote_code": true,
+    "dtype": "bfloat16",
+    "device_map": "auto",
+    "local_files_only": false,
+    "auto_model_class": "AutoModelForImageTextToText"
+  },
+  "experiments": {
+    "logp_sas_tpsa": [
+      "logp",
+      "sas",
+      "tpsa"
+    ]
+  },
+  "targets": {
+    "targets_per_experiment": 8,
+    "single_property_quantiles": [
+      0.2,
+      0.4,
+      0.6,
+      0.8
+    ],
+    "multi_property_selection": "joint_validation_rows",
+    "fixed_targets": {
+      "logp_sas_tpsa": [
+        {
+          "logp": 2.0,
+          "sas": 2.0,
+          "tpsa": 40.0
+        },
+        {
+          "logp": 2.0,
+          "sas": 4.0,
+          "tpsa": 40.0
+        },
+        {
+          "logp": 6.0,
+          "sas": 4.0,
+          "tpsa": 40.0
+        },
+        {
+          "logp": 6.0,
+          "sas": 2.0,
+          "tpsa": 40.0
+        },
+        {
+          "logp": 6.0,
+          "sas": 4.0,
+          "tpsa": 80.0
+        },
+        {
+          "logp": 2.0,
+          "sas": 4.0,
+          "tpsa": 80.0
+        },
+        {
+          "logp": 2.0,
+          "sas": 2.0,
+          "tpsa": 80.0
+        },
+        {
+          "logp": 6.0,
+          "sas": 2.0,
+          "tpsa": 80.0
+        }
+      ]
+    }
+  },
+  "generation": {
+    "shots": 0,
+    "replicates_per_target": 1,
+    "generations_per_replicate": 25,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "max_new_tokens": 128,
+    "do_sample": true,
+    "repetition_penalty": 1.0,
+    "generations_per_replicate_by_target": [
+      13,
+      13,
+      13,
+      13,
+      12,
+      12,
+      12,
+      12
+    ]
+  },
+  "evaluation": {
+    "tolerances": {
+      "logp": 0.5,
+      "tpsa": 10.0,
+      "sas": 0.5,
+      "qed": 0.05
+    }
+  },
+  "paths": {
+    "target_manifest": "manifests/logp_sas_tpsa_zero_shot_targets.json",
+    "job_manifest": "manifests/logp_sas_tpsa_zero_shot_jobs.jsonl",
+    "generation_output": "outputs/raw/logp_sas_tpsa_zero_shot.jsonl",
+    "smoke_output": "outputs/raw/logp_sas_tpsa_smoke_test.jsonl"
+  }
+}

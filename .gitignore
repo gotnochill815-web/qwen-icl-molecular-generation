@@ -1,0 +1,32 @@
+# Datasets and model checkpoints
+data/
+datasets/
+models/
+
+# Generated outputs and manifests
+outputs/
+manifests/*.json
+manifests/*.jsonl
+logs/
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*token*
+*secret*
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.egg-info/
+
+# Logs, backups and temporary files
+*.log
+*.bak
+*.tmp
+
+# Hugging Face caches
+.cache/
+.huggingface/
