@@ -180,6 +180,7 @@ def main():
     parser.add_argument("--config", required=True)
     parser.add_argument("--input", default=None)
     parser.add_argument("--tag", default=None)
+    parser.add_argument("--experiment", default=None)
     args = parser.parse_args()
 
     config_path = Path(args.config)
@@ -190,10 +191,22 @@ def main():
         config = json.load(f)
 
     experiments = config["experiments"]
-    if len(experiments) != 1:
-        raise ValueError("Expected exactly one experiment.")
 
-    experiment, properties = next(iter(experiments.items()))
+    if args.experiment:
+        if args.experiment not in experiments:
+            raise ValueError(
+                f"Experiment {args.experiment!r} not found. "
+                f"Available: {list(experiments)}"
+            )
+        experiment = args.experiment
+        properties = experiments[experiment]
+    else:
+        if len(experiments) != 1:
+            raise ValueError(
+                "This config contains multiple experiments. "
+                "Pass --experiment to select one."
+            )
+        experiment, properties = next(iter(experiments.items()))
     if len(properties) != 1:
         raise ValueError("Expected exactly one target property.")
 
@@ -218,7 +231,17 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     records = load_jsonl(input_path)
-    print("Input records:", len(records))
+    records = [
+        record for record in records
+        if record.get("experiment") == experiment
+    ]
+
+    if not records:
+        raise RuntimeError(
+            f"No generation records found for experiment: {experiment}"
+        )
+
+    print(f"Input records for {experiment}:", len(records))
 
     train_set = load_training_reference(train_path, cache_path)
     rows = prepare_molecules(records, train_set, prop)

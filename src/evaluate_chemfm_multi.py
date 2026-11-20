@@ -199,10 +199,22 @@ def main():
         config = json.load(f)
 
     experiments = config["experiments"]
-    if len(experiments) != 1:
-        raise ValueError("Expected one experiment.")
 
-    experiment, properties = next(iter(experiments.items()))
+    if args.experiment:
+        if args.experiment not in experiments:
+            raise ValueError(
+                f"Experiment {args.experiment!r} not found. "
+                f"Available: {list(experiments)}"
+            )
+        experiment = args.experiment
+        properties = experiments[experiment]
+    else:
+        if len(experiments) != 1:
+            raise ValueError(
+                "This config contains multiple experiments. "
+                "Pass --experiment to select one."
+            )
+        experiment, properties = next(iter(experiments.items()))
 
     if (
         len(properties) not in (2, 3)
@@ -217,7 +229,17 @@ def main():
     print("Properties:", properties)
 
     records = load_jsonl(input_path)
-    print("Input records:", len(records))
+    records = [
+        record for record in records
+        if record.get("experiment") == experiment
+    ]
+
+    if not records:
+        raise RuntimeError(
+            f"No generation records found for experiment: {experiment}"
+        )
+
+    print(f"Input records for {experiment}:", len(records))
 
     train_set = load_training_reference(
         ROOT / config["dataset"]["train"],
@@ -284,7 +306,8 @@ def main():
         writer.writeheader()
         writer.writerows(summary_rows)
 
-    print("\n========== OVERALL TPSA + SAS METRICS ==========")
+    label = " + ".join(prop.upper() for prop in properties)
+    print(f"\n========== OVERALL {label} METRICS ==========")
     print(json.dumps(overall, indent=2))
 
     print("\n========== PER-TARGET METRICS ==========")

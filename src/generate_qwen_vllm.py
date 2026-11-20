@@ -15,7 +15,7 @@ from common import (
     build_prompt,
     make_record,
 )
-from generate_qwen import format_chat_prompt
+from prompting import format_chat_prompt
 
 
 def preflight(engine_config):
@@ -40,27 +40,37 @@ def preflight(engine_config):
         props = torch.cuda.get_device_properties(index)
         memory_gb = props.total_memory / (1024 ** 3)
         gpu_memory.append(memory_gb)
-        print(
-            f"GPU {index}: {props.name} | "
-            f"{memory_gb:.1f} GiB"
-        )
+        print(f"GPU {index}: {props.name} | {memory_gb:.1f} GiB")
 
     visible_memory = sum(gpu_memory)
-    required_memory = float(
-        engine_config.get("required_total_gpu_memory_gb", 0)
+    minimum_vram = float(
+        engine_config.get("minimum_gpu_vram_gb", 0)
+    )
+    cpu_offload_per_gpu = float(
+        engine_config.get("cpu_offload_gb", 0)
     )
 
-    print("Total visible GPU memory:", round(visible_memory, 1), "GiB")
-    print("Required GPU memory:", required_memory, "GiB")
+    print("Visible GPU VRAM:", round(visible_memory, 1), "GiB")
+    print("Model recipe VRAM minimum:", minimum_vram, "GiB")
+    print("CPU offload configured per GPU:", cpu_offload_per_gpu, "GiB")
 
-    # Fail before model initialization rather than attempting a known
-    # impossible full-precision load.
-    if required_memory and visible_memory < required_memory:
-        raise RuntimeError(
-            "\nInsufficient GPU memory for the configured checkpoint. "
-            f"Visible: {visible_memory:.1f} GiB; "
-            f"required: {required_memory:.1f} GiB. "
-            "No model loading was attempted."
+    if visible_memory < minimum_vram:
+        if cpu_offload_per_gpu <= 0:
+            raise RuntimeError(
+                "GPU VRAM is below the model recipe minimum and CPU "
+                "offload is disabled. Model loading was not attempted."
+            )
+
+        print(
+            "WARNING: GPU VRAM is below the documented model minimum. "
+            "CPU weight offload is experimental for this configuration. "
+            "It does not count as GPU VRAM and does not guarantee loading."
+        )
+
+    if cpu_offload_per_gpu > 0:
+        print(
+            "WARNING: Ensure the Slurm job has enough host RAM for CPU "
+            "weight offload, model embeddings, and runtime overhead."
         )
 
 
