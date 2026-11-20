@@ -12,9 +12,9 @@
     ]
   },
   "model": {
-    "model_id": "Qwen/Qwen3.8-Flash-Next",
+    "model_id": "Inferact/Qwen3.8-Flash-Next-NVFP4",
     "trust_remote_code": true,
-    "dtype": "bfloat16"
+    "dtype": "auto"
   },
   "experiments": {
     "logp": [
@@ -79,13 +79,13 @@
   "vllm": {
     "tensor_parallel_size": 1,
     "max_model_len": 4096,
-    "max_num_seqs": 4,
-    "max_num_batched_tokens": 4096,
-    "batch_size": 4,
+    "max_num_seqs": 2,
+    "max_num_batched_tokens": 2048,
+    "batch_size": 2,
     "gpu_memory_utilization": 0.9,
-    "cpu_offload_gb": 0,
+    "cpu_offload_gb": 60,
     "language_model_only": true,
     "enable_prefix_caching": true,
-    "required_total_gpu_memory_gb": 423
+    "minimum_gpu_vram_gb": 130
   }
 }
